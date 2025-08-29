@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Loyalty Program</title>
+<style>
+  body { font-family: sans-serif; text-align: center; padding: 20px; }
+  .stamp { display: inline-block; width: 60px; height: 60px; border: 2px solid #333; margin: 5px; line-height: 60px; font-size: 20px; cursor: pointer; }
+  .active { background: orange; color: white; }
+  form { margin-bottom: 20px; }
+</style>
+</head>
+<body>
+<h1>Loyalty Program</h1>
+
+<form id="customerForm">
+  <input type="text" id="name" placeholder="Name" required>
+  <input type="email" id="email" placeholder="Email" required>
+  <input type="text" id="phone" placeholder="Phone" required>
+  <button type="submit">Join Loyalty Program</button>
+</form>
+
+<div id="stamps"></div>
+
+<p id="points"></p>
+
+<script>
+const backendURL = "https://loyalty-app-backend.onrender.com"; // <-- Your Render backend URL
+
+let currentUser = null;
+
+document.getElementById('customerForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name = document.getElementById('name').value;
+  const email = document.getElementById('email').value;
+  const phone = document.getElementById('phone').value;
+
+  // Create user in backend
+  const res = await fetch(`${backendURL}/api/users`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, email, phone })
+  });
+  currentUser = await res.json();
+  document.getElementById('customerForm').style.display = 'none';
+  loadStamps();
+});
+
+function loadStamps() {
+  const container = document.getElementById('stamps');
+  container.innerHTML = '';
+  for(let i = 1; i <= 12; i++) {
+    const div = document.createElement('div');
+    div.className = 'stamp';
+    div.textContent = i;
+    if(currentUser.points >= i) div.classList.add('active');
+    div.addEventListener('click', () => addPoint(i));
+    container.appendChild(div);
+  }
+  document.getElementById('points').textContent = `Points: ${currentUser.points}`;
+}
+
+async function addPoint(i) {
+  if(currentUser.points >= i) return; // already stamped
+  const res = await fetch(`${backendURL}/api/users/${currentUser._id}/addpoints`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ points: 1 })
+  });
+  currentUser = await res.json();
+  loadStamps();
+}
+</script>
+</body>
+</html>
