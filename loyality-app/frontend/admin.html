@@ -9,27 +9,43 @@
 <div id="users"></div>
 
 <script>
+const backendURL = "https://loyalty-app1.onrender.com"; // <-- Your Render backend URL
+
 async function loadUsers() {
-  const res = await fetch('http://localhost:3000/api/users');
-  const users = await res.json();
-  const container = document.getElementById('users');
-  container.innerHTML = '';
-  users.forEach(u => {
-    const div = document.createElement('div');
-    div.innerHTML = u.name + ' - ' + u.email + ' - Active: ' + u.subscriptionActive +
-      ' <button onclick="activate(\\'' + u._id + '\\')">Activate</button>' +
-      ' <button onclick="addPoints(\\'' + u._id + '\\')">+10 Points</button>';
-    container.appendChild(div);
-  });
+  try {
+    const res = await fetch(`$https://loyalty-app1.onrender.com/api/users`);
+    const users = await res.json();
+    const container = document.getElementById('users');
+    container.innerHTML = '';
+
+    if(users.length === 0) {
+      container.innerHTML = "<p>No users yet.</p>";
+      return;
+    }
+
+    users.forEach(u => {
+      const div = document.createElement('div');
+      div.style.marginBottom = "10px";
+      div.innerHTML = `
+        <strong>${u.name}</strong> - ${u.email} - Active: ${u.subscriptionActive} - Points: ${u.points}
+        <button onclick="activate('${u._id}')">Activate</button>
+        <button onclick="addPoints('${u._id}')">+10 Points</button>
+      `;
+      container.appendChild(div);
+    });
+  } catch(err) {
+    document.getElementById('users').innerHTML = "<p>Error loading users.</p>";
+    console.error(err);
+  }
 }
 
 async function activate(id) {
-  await fetch('http://localhost:3000/api/users/' + id + '/activate', { method: 'POST' });
+  await fetch(`$https://loyalty-app1.onrender.com/api/users/${id}/activate`, { method: 'POST' });
   loadUsers();
 }
 
 async function addPoints(id) {
-  await fetch('http://localhost:3000/api/users/' + id + '/addpoints', {
+  await fetch(`$https://loyalty-app1.onrender.com/api/users/${id}/addpoints`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ points: 10 })
@@ -37,6 +53,7 @@ async function addPoints(id) {
   loadUsers();
 }
 
+// Load users on page load
 loadUsers();
 </script>
 </body>
